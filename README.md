@@ -69,12 +69,12 @@ This produces a `dist/` folder ready to deploy.
 ### Step 3: Install to your home screen
 
 1. Open **Chrome** on your phone and navigate to your URL
-2. Either:
-   - Go to **Settings → App** inside Baseline and tap **Install**, or
-   - Tap Chrome's **⋮ menu → Add to Home screen**
-3. Tap **Install** to confirm
+2. Tap the **⋮ menu** (top-right) → **Add to Home screen**
+3. Tap **Add** to confirm
 
-The app opens full-screen with no browser chrome, just like a native app. Your data lives entirely on your phone — the hosted files are just the app shell.
+The app icon will appear on your home screen and opens full-screen with no browser chrome, just like a native app. Your data lives entirely on your phone — the hosted files are just the app shell.
+
+> **Note:** Settings → App will show an **Install** shortcut after Chrome confirms the app meets its PWA criteria — this sometimes takes a return visit. The ⋮ menu method above always works immediately.
 
 > **Tip:** After installing, the app works fully offline. You only need the URL again if you reinstall or switch phones.
 
