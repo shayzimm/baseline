@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AppShell } from './components/layout/AppShell'
@@ -7,7 +7,7 @@ import { TodayView } from './views/Today'
 import { GoalsView } from './views/Goals'
 import { SettingsView } from './views/Settings'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
-import { db } from './db'
+import { db, seedDefaultStackOnce } from './db'
 
 // Recharts is ~350 KB — lazy-load Progress so it doesn't block the initial bundle
 const ProgressView = lazy(() =>
@@ -30,6 +30,10 @@ export function App() {
   const [sessionUnlocked, setSessionUnlocked] = useState(
     () => sessionStorage.getItem('baseline_unlocked') === '1'
   )
+
+  useEffect(() => {
+    seedDefaultStackOnce()
+  }, [])
 
   const settings = useLiveQuery(() => db.settings.get(1))
   useInstallPrompt()
