@@ -6,6 +6,7 @@ export interface DailyEntry {
   weightKg: number | null
   moodRating: 1 | 2 | 3 | 4 | 5 | null
   notes: string | null
+  source?: 'manual' | 'withings'   // absent on v1 rows — treat undefined as 'manual'
   createdAt: number      // Date.now()
   updatedAt: number
 }
@@ -41,11 +42,40 @@ export interface Settings {
   appLockPin: string | null   // hashed with SHA-256, never plaintext
 }
 
+export interface Supplement {
+  id?: number
+  name: string
+  doseLabel: string                // "400mg" — display only, no unit math
+  anchor: 'morning' | 'evening' | 'as-needed'
+  sortOrder: number
+  createdAt: number
+  archivedAt: number | null        // soft delete; archived items keep history readable
+}
+
+export interface SupplementLog {
+  id?: number
+  date: string                     // "YYYY-MM-DD"
+  supplementId: number
+  takenAt: number                  // Date.now() at check-off
+}
+
+export interface WithingsAuth {
+  id: 1                            // singleton — always ID 1
+  accessToken: string
+  refreshToken: string
+  accessTokenExpiresAt: number
+  withingsUserId: string
+  lastSyncedAt: number | null      // sync cursor for incremental fetch
+}
+
 class BaselineDB extends Dexie {
   dailyEntries!: Table<DailyEntry>
   weeklyPics!: Table<WeeklyPic>
   monthlyMeasurements!: Table<MonthlyMeasurement>
   settings!: Table<Settings>
+  supplements!: Table<Supplement>
+  supplementLogs!: Table<SupplementLog>
+  withingsAuth!: Table<WithingsAuth>
 
   constructor() {
     super('BaselineDB')
@@ -55,6 +85,14 @@ class BaselineDB extends Dexie {
       weeklyPics: '++id, date',
       monthlyMeasurements: '++id, date',
       settings: 'id',
+    })
+    this.version(2).stores({
+      // archivedAt is not indexed: IndexedDB can't index null, and the
+      // table is small enough to filter in JS
+      supplements: '++id, anchor',
+      // &[supplementId+date] = unique compound index (one log per supplement per day)
+      supplementLogs: '++id, date, &[supplementId+date]',
+      withingsAuth: 'id',
     })
   }
 }
