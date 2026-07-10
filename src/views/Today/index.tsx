@@ -6,6 +6,7 @@ import { db, upsertTodayEntry } from '../../db'
 import { WeightDial } from './WeightDial'
 import { MoodPicker } from './MoodPicker'
 import { QuickStats } from './QuickStats'
+import { SupplementChecklist } from './SupplementChecklist'
 
 export function TodayView() {
   const today = new Date().toISOString().slice(0, 10)
@@ -191,6 +192,9 @@ export function TodayView() {
           {logged ? 'Saved today' : 'Not logged yet'}
         </div>
       </div>
+
+      {/* ── Supplements ─────────────────────────────────────── */}
+      <SupplementChecklist />
 
       {/* ── 7-day quick stats (hidden until ≥ 2 entries) ───── */}
       <QuickStats />
