@@ -86,7 +86,9 @@ async function importV2(data: Record<string, unknown>): Promise<ImportResult> {
 
   if (Array.isArray(tables['supplements'])) {
     for (const s of tables['supplements'] as Supplement[]) {
-      if (!s.name) continue
+      // Without a numeric id, put() would MINT a new id — silently duplicating
+      // the supplement on every import instead of upserting.
+      if (typeof s.id !== 'number' || !Number.isFinite(s.id) || !s.name) continue
       await db.supplements.put(s)   // upsert by id — ids are stable per spec §3
       result.supplements++
     }
@@ -94,7 +96,10 @@ async function importV2(data: Record<string, unknown>): Promise<ImportResult> {
 
   if (Array.isArray(tables['supplementLogs'])) {
     for (const l of tables['supplementLogs'] as SupplementLog[]) {
-      if (!l.date || l.supplementId == null) continue
+      // A non-numeric supplementId never matches the numeric compound index —
+      // it would bypass dedupe and orphan the row forever.
+      if (typeof l.supplementId !== 'number' || !Number.isFinite(l.supplementId)) continue
+      if (typeof l.date !== 'string' || !l.date) continue
       const exists = await db.supplementLogs
         .where('[supplementId+date]').equals([l.supplementId, l.date]).first()
       if (!exists) {
@@ -107,7 +112,12 @@ async function importV2(data: Record<string, unknown>): Promise<ImportResult> {
   }
 
   const settingsRows = Array.isArray(tables['settings']) ? (tables['settings'] as Settings[]) : []
-  if (settingsRows[0]) await db.settings.put({ ...settingsRows[0], id: 1 })
+  if (settingsRows[0]) {
+    // merge over the seeded defaults so a truncated backup row can't
+    // produce a settings object with missing fields (e.g. no goals)
+    const current = await db.settings.get(1)
+    await db.settings.put({ ...(current as Settings), ...settingsRows[0], id: 1 })
+  }
 
   return result
 }
@@ -149,6 +159,10 @@ async function appendMeasurements(measurements: MonthlyMeasurement[]): Promise<n
   let count = 0
   for (const m of measurements) {
     if (!m.date) continue
+    // measurements are monthly snapshots — one row per date; re-importing
+    // the same backup must be a no-op, matching entries and logs
+    const exists = await db.monthlyMeasurements.where('date').equals(m.date).first()
+    if (exists) continue
     await db.monthlyMeasurements.add({
       date: m.date,
       measurements: m.measurements ?? {},

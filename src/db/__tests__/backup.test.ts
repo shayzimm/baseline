@@ -145,4 +145,51 @@ describe('importData', () => {
     await expect(importData(null)).rejects.toThrow('Invalid data format')
     await expect(importData('nope')).rejects.toThrow('Invalid data format')
   })
+
+  it('skips malformed supplement and log rows instead of corrupting the tables', async () => {
+    const result = await importData({
+      version: 2,
+      tables: {
+        supplements: [
+          { name: 'No id — would mint a duplicate on every import', doseLabel: '', anchor: 'morning', sortOrder: 0, createdAt: 1, archivedAt: null },
+          { id: 7, name: 'Valid', doseLabel: '', anchor: 'morning', sortOrder: 0, createdAt: 1, archivedAt: null },
+        ],
+        supplementLogs: [
+          { supplementId: '7', date: '2026-07-10', takenAt: 1 },
+          { supplementId: 7, date: '2026-07-10', takenAt: 1 },
+        ],
+      },
+    })
+    expect(result.supplements).toBe(1)
+    expect(result.supplementLogs).toBe(1)
+    expect(await db.supplements.count()).toBe(1)
+    expect(await db.supplementLogs.count()).toBe(1)
+  })
+
+  it('re-importing the same file does not duplicate measurements', async () => {
+    await db.monthlyMeasurements.add({ date: '2026-07-01', measurements: { waist: 80 }, notes: null, createdAt: 1 })
+    const backup = await exportAllData()
+    const result = await importData(backup)
+    expect(result.measurements).toBe(0)
+    expect(await db.monthlyMeasurements.count()).toBe(1)
+  })
+
+  it('imported settings merge over defaults so missing fields cannot crash consumers', async () => {
+    await importData({
+      version: 2,
+      tables: { settings: [{ id: 1, units: 'imperial' }] },
+    })
+    const s = await db.settings.get(1)
+    expect(s?.units).toBe('imperial')
+    expect(s?.goals).toBeDefined()          // seeded default survives
+    expect(s?.measurementSites).toContain('waist')
+  })
+
+  it('never imports weeklyPics even when present in the file', async () => {
+    await importData({
+      version: 2,
+      tables: { weeklyPics: [{ date: '2026-07-10', notes: 'junk without blobs', createdAt: 1 }] },
+    })
+    expect(await db.weeklyPics.count()).toBe(0)
+  })
 })
