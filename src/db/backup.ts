@@ -124,7 +124,9 @@ async function upsertEntries(entries: DailyEntry[]): Promise<number> {
         weightKg: e.weightKg ?? null,
         moodRating: e.moodRating ?? null,
         notes: e.notes ?? null,
-        source: e.source ?? 'manual',
+        // only overwrite provenance when the backup actually carries it —
+        // v1 rows never do, and merging must not erase 'withings'
+        ...(e.source !== undefined ? { source: e.source } : {}),
         updatedAt: Date.now(),
       })
     } else {

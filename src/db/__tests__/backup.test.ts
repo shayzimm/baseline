@@ -88,6 +88,20 @@ describe('importData', () => {
     expect(entry?.weightKg).toBe(82.1)
   })
 
+  it('v1 merge preserves the existing source field (does not clobber withings provenance)', async () => {
+    await db.dailyEntries.add({
+      date: '2026-03-30', weightKg: 82.0, moodRating: null, notes: null,
+      source: 'withings', createdAt: 1, updatedAt: 1,
+    })
+    await importData({
+      version: 1,
+      entries: [{ date: '2026-03-30', weightKg: 82.1, moodRating: 3, notes: null, createdAt: 1, updatedAt: 1 }],
+    })
+    const entry = await db.dailyEntries.where('date').equals('2026-03-30').first()
+    expect(entry?.source).toBe('withings')
+    expect(entry?.weightKg).toBe(82.1)
+  })
+
   it('round-trips a v2 export through a wiped database', async () => {
     await db.dailyEntries.add({
       date: '2026-07-10', weightKg: 80, moodRating: 4, notes: 'hi',
