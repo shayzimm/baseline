@@ -6,7 +6,7 @@ export const BACKUP_VERSION = 2
 // a backup holding a live refresh token would grant Withings access to
 // anyone with the file (restoring on a new device re-links the scale
 // instead). weeklyPics ships metadata only — Blobs can't JSON.stringify.
-const EXPORTED_TABLES = [
+export const EXPORTED_TABLES = [
   'dailyEntries',
   'weeklyPics',
   'monthlyMeasurements',

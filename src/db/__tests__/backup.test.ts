@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../schema'
-import { exportAllData } from '../backup'
+import { exportAllData, EXPORTED_TABLES } from '../backup'
 
 beforeEach(async () => {
   await db.delete()
@@ -44,5 +44,11 @@ describe('exportAllData (backup v2)', () => {
     const pic = data.tables.weeklyPics[0] as Record<string, unknown>
     expect(pic['front']).toBeUndefined()
     expect(pic['notes']).toBe('week 1')
+  })
+
+  it('accounts for every Dexie table — new tables must be added to the manifest or deliberately excluded', () => {
+    const KNOWN_EXCLUSIONS = ['withingsAuth'] // holds OAuth tokens; must never be exported
+    const allTables = db.tables.map(t => t.name).sort()
+    expect(allTables).toEqual([...EXPORTED_TABLES, ...KNOWN_EXCLUSIONS].sort())
   })
 })
