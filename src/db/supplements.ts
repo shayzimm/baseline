@@ -13,13 +13,18 @@ export const DEFAULT_STACK: Array<Pick<Supplement, 'name' | 'doseLabel' | 'ancho
 
 // Seed only when the table has never had rows. Archived rows keep the
 // count > 0, so this cannot re-seed over a deliberately emptied stack.
+// The rw transaction makes check+write atomic: IndexedDB serializes
+// readwrite transactions on the same store, so a StrictMode double-invoke
+// (two concurrent calls) cannot both see an empty table and double-seed.
 export async function seedDefaultStackOnce(): Promise<void> {
-  const count = await db.supplements.count()
-  if (count > 0) return
-  const now = Date.now()
-  await db.supplements.bulkAdd(
-    DEFAULT_STACK.map((s, i) => ({ ...s, sortOrder: i, createdAt: now, archivedAt: null }))
-  )
+  await db.transaction('rw', db.supplements, async () => {
+    const count = await db.supplements.count()
+    if (count > 0) return
+    const now = Date.now()
+    await db.supplements.bulkAdd(
+      DEFAULT_STACK.map((s, i) => ({ ...s, sortOrder: i, createdAt: now, archivedAt: null }))
+    )
+  })
 }
 
 // Toggle a day's log row for a supplement. Returns true if now taken.
@@ -31,6 +36,13 @@ export async function toggleSupplementLog(supplementId: number, date: string): P
     await db.supplementLogs.delete(existing.id)
     return false
   }
-  await db.supplementLogs.add({ supplementId, date, takenAt: Date.now() })
+  try {
+    await db.supplementLogs.add({ supplementId, date, takenAt: Date.now() })
+  } catch (err) {
+    // A concurrent toggle won the race — the unique [supplementId+date]
+    // index rejected our add. The day is logged either way.
+    if (err instanceof Error && err.name === 'ConstraintError') return true
+    throw err
+  }
   return true
 }

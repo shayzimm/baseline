@@ -32,7 +32,7 @@ export function App() {
   )
 
   useEffect(() => {
-    seedDefaultStackOnce()
+    seedDefaultStackOnce().catch(console.error)
   }, [])
 
   const settings = useLiveQuery(() => db.settings.get(1))

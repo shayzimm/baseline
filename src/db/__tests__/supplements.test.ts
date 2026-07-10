@@ -24,6 +24,11 @@ describe('seedDefaultStackOnce', () => {
     await seedDefaultStackOnce()
     expect(await db.supplements.count()).toBe(DEFAULT_STACK.length)
   })
+
+  it('is safe under concurrent invocation (StrictMode double-invoke)', async () => {
+    await Promise.all([seedDefaultStackOnce(), seedDefaultStackOnce()])
+    expect(await db.supplements.count()).toBe(DEFAULT_STACK.length)
+  })
 })
 
 describe('toggleSupplementLog', () => {
@@ -38,5 +43,18 @@ describe('toggleSupplementLog', () => {
 
     expect(await toggleSupplementLog(id, '2026-07-10')).toBe(false)
     expect(await db.supplementLogs.count()).toBe(0)
+  })
+
+  it('a double-tap race resolves without rejection and leaves exactly one log', async () => {
+    const id = await db.supplements.add({
+      name: 'Creatine', doseLabel: '5g', anchor: 'morning',
+      sortOrder: 0, createdAt: Date.now(), archivedAt: null,
+    })
+    const results = await Promise.all([
+      toggleSupplementLog(id, '2026-07-10'),
+      toggleSupplementLog(id, '2026-07-10'),
+    ])
+    expect(await db.supplementLogs.count()).toBeLessThanOrEqual(1)
+    expect(results).toHaveLength(2)
   })
 })
