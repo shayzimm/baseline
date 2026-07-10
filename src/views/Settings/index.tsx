@@ -629,7 +629,7 @@ function DangerZone() {
           <LastSettingsRow
             icon={<Trash2 size={17} />}
             label="Clear all data"
-            sublabel="Permanently delete all entries, photos, and goals"
+            sublabel="Permanently delete all entries, photos, supplements, and goals"
             onClick={() => setConfirm(true)}
             danger
           />
@@ -639,7 +639,7 @@ function DangerZone() {
               This cannot be undone.
             </div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--color-ink-mute)', marginBottom: 14 }}>
-              All weight entries, progress photos, measurements, and goals will be permanently deleted.
+              All weight entries, progress photos, measurements, supplements, and goals will be permanently deleted.
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
