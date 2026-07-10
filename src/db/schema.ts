@@ -189,27 +189,3 @@ export async function importData(raw: unknown): Promise<{ entries: number; measu
 
   return { entries: entriesCount, measurements: measurementsCount }
 }
-
-// Export all data as a plain JSON-serialisable object.
-// Blob images are excluded (they can't JSON.stringify) — a full binary export
-// will be added in Phase 3 once the pics feature is built.
-export async function exportAllData() {
-  const [entries, pics, measurements, settings] = await Promise.all([
-    db.dailyEntries.toArray(),
-    db.weeklyPics.toArray(),
-    db.monthlyMeasurements.toArray(),
-    db.settings.toArray(),
-  ])
-  const picsExportable = pics.map(({ front: _f, side: _s, back: _b, ...rest }) => ({
-    ...rest,
-    _note: 'Image blobs excluded — binary export coming in a future version',
-  }))
-  return {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    entries,
-    pics: picsExportable,
-    measurements,
-    settings,
-  }
-}
