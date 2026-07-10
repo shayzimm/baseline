@@ -2,11 +2,10 @@ export {
   db,
   upsertTodayEntry,
   getSettings,
-  importData,
 } from './schema'
 
-export { exportAllData, BACKUP_VERSION } from './backup'
-export type { BackupFile } from './backup'
+export { exportAllData, importData, BACKUP_VERSION } from './backup'
+export type { BackupFile, ImportResult } from './backup'
 
 export type {
   DailyEntry,
