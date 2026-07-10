@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Download, Upload, Trash2, Plus, X, Lock, LockOpen, HardDrive, Smartphone } from 'lucide-react'
-import { db, exportAllData, importData } from '../../db'
+import { db, exportAllData, importData, type ImportResult } from '../../db'
 import { triggerInstallPrompt, canInstall } from '../../hooks/useInstallPrompt'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ function DataSection() {
   const [exported, setExported] = useState(false)
 
   const [importing, setImporting] = useState(false)
-  const [importResult, setImportResult] = useState<{ entries: number; measurements: number } | null>(null)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -332,7 +332,7 @@ function DataSection() {
           />
           {importResult && (
             <div style={{ padding: '10px 18px', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--color-good)', borderTop: '1px solid var(--color-line)' }}>
-              Imported {importResult.entries} entries + {importResult.measurements} measurements ✓
+              Imported {importResult.entries} entries · {importResult.measurements} measurements · {importResult.supplements} supplements · {importResult.supplementLogs} logs ✓
             </div>
           )}
           {importError && (
@@ -604,6 +604,9 @@ function DangerZone() {
     await db.dailyEntries.clear()
     await db.weeklyPics.clear()
     await db.monthlyMeasurements.clear()
+    await db.supplements.clear()
+    await db.supplementLogs.clear()
+    await db.withingsAuth.clear()
     await db.settings.put({
       id: 1,
       units: 'metric',
