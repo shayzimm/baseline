@@ -1,13 +1,13 @@
 import { type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { db } from '../../db'
+import { db, localDateString } from '../../db'
 
 export function QuickStats() {
   const settings = useLiveQuery(() => db.settings.get(1))
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10)
-  const today = new Date().toISOString().slice(0, 10)
+  const sevenDaysAgo = localDateString(new Date(Date.now() - 7 * 86_400_000))
+  const today = localDateString()
 
   const recent = useLiveQuery(
     () => db.dailyEntries.where('date').between(sevenDaysAgo, today, true, true).toArray(),

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Camera, X, ChevronLeft, ArrowLeftRight } from 'lucide-react'
-import { db, type WeeklyPic } from '../../db'
+import { db, localDateString, type WeeklyPic } from '../../db'
 
 // ── Image compression ─────────────────────────────────────────────────────────
 
@@ -53,7 +53,7 @@ function UploadForm({ onClose }: { onClose: () => void }) {
     if (Object.keys(blobs).length === 0) return
     setSaving(true)
     await db.weeklyPics.add({
-      date: new Date().toISOString().slice(0, 10),
+      date: localDateString(),
       front: blobs.front ?? null,
       side: blobs.side ?? null,
       back: blobs.back ?? null,

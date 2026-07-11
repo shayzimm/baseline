@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Sparkles, Camera, Ruler } from 'lucide-react'
 import { type ReactNode } from 'react'
-import { db, upsertTodayEntry } from '../../db'
+import { db, upsertTodayEntry, localDateString } from '../../db'
 import { WeightDial } from './WeightDial'
 import { MoodPicker } from './MoodPicker'
 import { QuickStats } from './QuickStats'
 import { SupplementChecklist } from './SupplementChecklist'
 
 export function TodayView() {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateString()
   const entry = useLiveQuery(
     () => db.dailyEntries.where('date').equals(today).first(),
     [today]

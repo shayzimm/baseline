@@ -2,6 +2,7 @@ export {
   db,
   upsertTodayEntry,
   getSettings,
+  localDateString,
 } from './schema'
 
 export { exportAllData, importData, BACKUP_VERSION } from './backup'

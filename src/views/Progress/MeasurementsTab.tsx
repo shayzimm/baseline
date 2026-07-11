@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, X } from 'lucide-react'
-import { db, type MonthlyMeasurement } from '../../db'
+import { db, localDateString, type MonthlyMeasurement } from '../../db'
 
 function formatDate(iso: string) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-AU', {
@@ -26,7 +26,7 @@ function AddMeasurementForm({ sites, onClose }: { sites: string[]; onClose: () =
     if (Object.keys(measurements).length === 0) return
     setSaving(true)
     await db.monthlyMeasurements.add({
-      date: new Date().toISOString().slice(0, 10),
+      date: localDateString(),
       measurements,
       notes: notes.trim() || null,
       createdAt: Date.now(),

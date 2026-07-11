@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../../db'
+import { db, localDateString } from '../../db'
 import { WeightChart } from './WeightChart'
 import { EntryList } from './EntryList'
 
@@ -16,11 +16,11 @@ interface WeightTabProps {
 function getRangeStart(range: Range): string {
   const days = RANGE_DAYS[range]
   if (days === null) return '1970-01-01'
-  return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+  return localDateString(new Date(Date.now() - days * 86_400_000))
 }
 
 export function WeightTab({ range, onRangeChange, unit }: WeightTabProps) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateString()
   const rangeStart = getRangeStart(range)
 
   const entries = useLiveQuery(

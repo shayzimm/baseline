@@ -113,10 +113,20 @@ db.on('populate', async () => {
 
 // ─── Typed helpers ────────────────────────────────────────────────────────────
 
+// The app's canonical "today". Uses the device's LOCAL calendar date —
+// toISOString() would give the UTC date, which in UTC+8 is still
+// yesterday until 8am: exactly when morning supplements get logged.
+export function localDateString(d: Date = new Date()): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export async function upsertTodayEntry(
   data: Partial<Omit<DailyEntry, 'id' | 'date' | 'createdAt'>>
 ): Promise<void> {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateString()
   const existing = await db.dailyEntries.where('date').equals(today).first()
   if (existing?.id != null) {
     await db.dailyEntries.update(existing.id, { ...data, updatedAt: Date.now() })

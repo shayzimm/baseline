@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Check } from 'lucide-react'
-import { db, toggleSupplementLog, type Supplement } from '../../db'
+import { db, toggleSupplementLog, localDateString, type Supplement } from '../../db'
 
 const ANCHOR_LABELS: Record<Supplement['anchor'], string> = {
   morning: 'Morning · with coffee',
@@ -9,7 +9,7 @@ const ANCHOR_LABELS: Record<Supplement['anchor'], string> = {
 }
 
 export function SupplementChecklist() {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateString()
 
   const supplements = useLiveQuery(
     async () =>
