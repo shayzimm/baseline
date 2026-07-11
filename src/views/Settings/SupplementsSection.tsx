@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, X, ChevronUp, ChevronDown, Archive, ArchiveRestore } from 'lucide-react'
-import { db, type Supplement } from '../../db'
+import { addSupplement, db, type Supplement } from '../../db'
 import { SectionHeading, SettingsCard } from './shared'
 
 const ANCHORS = ['morning', 'evening', 'as-needed'] as const
@@ -49,11 +49,7 @@ export function SupplementsSection() {
     const name = form.name.trim()
     if (!name) return
     if (editingId === 'new') {
-      const maxSort = active.reduce((m, s) => Math.max(m, s.sortOrder), -1)
-      await db.supplements.add({
-        name, doseLabel: form.doseLabel.trim(), anchor: form.anchor,
-        sortOrder: maxSort + 1, createdAt: Date.now(), archivedAt: null,
-      })
+      await addSupplement({ name, doseLabel: form.doseLabel.trim(), anchor: form.anchor })
     } else if (editingId != null) {
       await db.supplements.update(editingId, {
         name, doseLabel: form.doseLabel.trim(), anchor: form.anchor,

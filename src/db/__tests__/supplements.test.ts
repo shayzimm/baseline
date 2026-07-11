@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../schema'
-import { DEFAULT_STACK, seedDefaultStackOnce, toggleSupplementLog } from '../supplements'
+import { addSupplement, DEFAULT_STACK, seedDefaultStackOnce, toggleSupplementLog } from '../supplements'
 
 beforeEach(async () => {
   await db.delete()
@@ -28,6 +28,21 @@ describe('seedDefaultStackOnce', () => {
   it('is safe under concurrent invocation (StrictMode double-invoke)', async () => {
     await Promise.all([seedDefaultStackOnce(), seedDefaultStackOnce()])
     expect(await db.supplements.count()).toBe(DEFAULT_STACK.length)
+  })
+})
+
+describe('addSupplement', () => {
+  it('allocates a unique sortOrder even after archive → add → restore', async () => {
+    await seedDefaultStackOnce()
+    // archive the HIGHEST-sorted item, so the active max drops
+    const last = (await db.supplements.toArray()).find(s => s.name === 'L-theanine')!
+    await db.supplements.update(last.id!, { archivedAt: Date.now() })
+    await addSupplement({ name: 'Zinc', doseLabel: '', anchor: 'evening' })
+    await db.supplements.update(last.id!, { archivedAt: null })
+
+    const active = (await db.supplements.toArray()).filter(s => s.archivedAt == null)
+    const orders = active.map(s => s.sortOrder)
+    expect(new Set(orders).size).toBe(orders.length)   // no duplicates
   })
 })
 

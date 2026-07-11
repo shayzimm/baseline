@@ -27,6 +27,27 @@ export async function seedDefaultStackOnce(): Promise<void> {
   })
 }
 
+// Add a supplement with the next sortOrder. The max is taken over ALL
+// rows including archived: restore() keeps a row's sortOrder, so
+// allocating from the active max alone can hand out a duplicate
+// (archive the top item → add → restore = two rows sharing an order,
+// which makes the reorder swap a silent no-op). Transactional so a
+// double-submit can't compute the same stale max twice.
+export async function addSupplement(
+  fields: Pick<Supplement, 'name' | 'doseLabel' | 'anchor'>
+): Promise<number> {
+  return db.transaction('rw', db.supplements, async () => {
+    const all = await db.supplements.toArray()
+    const maxSort = all.reduce((m, s) => Math.max(m, s.sortOrder), -1)
+    return db.supplements.add({
+      ...fields,
+      sortOrder: maxSort + 1,
+      createdAt: Date.now(),
+      archivedAt: null,
+    })
+  })
+}
+
 // Toggle a day's log row for a supplement. Returns true if now taken.
 // Absence of a row IS the miss — no "missed" records are ever written.
 export async function toggleSupplementLog(supplementId: number, date: string): Promise<boolean> {
