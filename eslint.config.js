@@ -6,7 +6,8 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // dev-dist holds vite-plugin-pwa's generated dev service worker — never lint it
+  globalIgnores(['dist', 'dev-dist']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -18,6 +19,14 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+    rules: {
+      // underscore prefix = deliberately discarded (e.g. stripping blob fields
+      // in a destructure); matches the convention already used in backup.ts
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^_', argsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
+      ],
     },
   },
 ])
